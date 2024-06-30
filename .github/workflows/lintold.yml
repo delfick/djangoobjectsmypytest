@@ -29,11 +29,8 @@ jobs:
           git config user.email github-actions@github.com
           git am ./scripts/make_old.patch
 
-      - name: Install deps
-        shell: bash
-        env:
-          VENVSTARTER_ONLY_MAKE_VENV: "1"
-        run: python ./tools/venv
+      - name: Install venv
+        run: ./run.sh --venvstarter-venv-only
 
       - name: Ensure linter is happy
         run: ./lint
@@ -54,11 +51,8 @@ jobs:
           git config user.email github-actions@github.com
           git am ./scripts/make_old.patch
 
-      - name: Install deps
-        shell: bash
-        env:
-          VENVSTARTER_ONLY_MAKE_VENV: "1"
-        run: python ./tools/venv
+      - name: Install venv
+        run: ./run.sh --venvstarter-venv-only
 
       - name: Ensure mypy is happy
         run: ./types

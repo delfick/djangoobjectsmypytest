@@ -23,11 +23,8 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install deps
-        shell: bash
-        env:
-          VENVSTARTER_ONLY_MAKE_VENV: "1"
-        run: python ./tools/venv
+      - name: Install venv
+        run: ./run.sh --venvstarter-venv-only
 
       - name: Ensure linter is happy
         run: ./lint
@@ -46,11 +43,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install deps
-        shell: bash
-        env:
-          VENVSTARTER_ONLY_MAKE_VENV: "1"
-        run: python ./tools/venv
+      - name: Install venv
+        run: ./run.sh --venvstarter-venv-only
 
       - name: Ensure mypy is happy
         run: ./types
@@ -65,11 +59,8 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install deps
-        shell: bash
-        env:
-          VENVSTARTER_ONLY_MAKE_VENV: "1"
-        run: python ./tools/venv
+      - name: Install venv
+        run: ./run.sh --venvstarter-venv-only
 
       - name: Ensure code is formatted
         run: |

@@ -1,51 +1,37 @@
-#!/usr/bin/env python3
+#!/bin/bash
 
-import os
-import runpy
-from pathlib import Path
+if [ -z "$VENVSTARTER_PROJECT_ROOT" ]; then
+    echo "!!! Must set VENVSTARTER_PROJECT_ROOT in environment before calling this script"
+    exit 1
+fi
 
-here = Path(__file__).parent
-manager = runpy.run_path(str(Path(__file__).parent / "bootstrap_venvstarter.py"))["manager"]
+TOOLS="$VENVSTARTER_PROJECT_ROOT/tools"
 
+if [ ! -d "$TOOLS/deps/uv-venv" ]; then
+    if ! "$TOOLS/bootstrap_uv.sh" venv "$TOOLS/deps/uv-venv"; then
+        echo "Failed to bootstrap uv"
+    fi
+fi
 
-def run(venv_location: Path, args: list[str]) -> str | list[str] | None:
-    devtools_location = Path(__file__).parent / "devtools.py"
-    return ["python", str(devtools_location)]
+if [ ! -f "$TOOLS/deps/venvstarter/bootstrap.py" ]; then
+    rm -f "$TOOLS/deps/venvstarter*"
+fi
 
+VENVSTARTER="https://github.com/delfick/venvstarter/archive/rewrite-it-all.zip#egg=venvstarter==0.13.0"
+if [ ! -f "$TOOLS/deps/venvstarter/bootstrap.py" ]; then
+    if ! "$TOOLS/bootstrap_uv.sh" pip install "$VENVSTARTER" --target "$TOOLS/deps" -p "$TOOLS/deps/uv-venv/bin/python"; then
+        echo "Failed to ensure we have venvstarter"
+        exit 1
+    fi
+fi
 
-manager = manager(run).named(".python")
-
-manager.add_local_dep(
-    "{here}",
-    "..",
-    version_file=("extended_mypy_django_plugin", "version.py"),
-    name="extended_mypy_django_plugin[stubs-latest]=={version}",
-)
-
-manager.add_local_dep(
-    "{here}",
-    "..",
-    "scripts",
-    "test_helpers",
-    version_file=("extended_mypy_django_plugin_test_driver", "version.py"),
-    name="extended_mypy_django_plugin_test_driver=={version}",
-)
-
-manager.add_local_dep(
-    "{here}",
-    "..",
-    "example",
-    version_file=("djangoexample", "version.py"),
-    name="djangoexample=={version}",
-)
-
-if "TOX_PYTHON" in os.environ:
-    folder = Path(os.environ["TOX_PYTHON"]).parent.parent
-    manager.place_venv_in(folder.parent)
-    manager.named(folder.name)
-else:
-    manager.add_requirements_file("{here}", "requirements.dev.txt")
-    manager.add_requirements_file("{here}", "requirements.docs.txt")
-    manager.min_python("3.10")
-
-manager.run()
+"$TOOLS/deps/uv-venv/bin/python" "$TOOLS/deps/venvstarter/bootstrap.py" \
+    --venvstarter-python ">=3.10" \
+    --venvstarter-version "$VENVSTARTER" \
+    --venvstarter-deps-manager "./tools/manage_deps.py" \
+    --venvstarter-tools-manager "./tools/manage_tools.py" \
+    --venvstarter-uv "./tools/bootstrap_uv.sh" \
+    --venvstarter-manual-marker "./tools/__manual_virtualenv__" \
+    --venvstarter-venv-location "./.venv" \
+    --venvstarter-original-venv "${VIRTUAL_ENV:--}" \
+    -- "$@"
